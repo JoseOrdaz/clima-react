@@ -1,66 +1,67 @@
-import {useState, createContext} from 'react';
-import axios from 'axios'
+import { useState, createContext } from "react";
+import axios from "axios";
 
 const ClimaContext = createContext();
 
-const ClimaProvider = ({children}) => {
+const ClimaProvider = ({ children }) => {
+  const [busqueda, setBusqueda] = useState({
+    ciudad: "",
+    pais: "",
+  });
 
-const [busqueda, setBusqueda] = useState({
-        ciudad:'', 
-        pais:''
+  const [resultado, setResultado] = useState({});
+  const [cargando, setCargando] = useState(false);
+  const [noResultado, setnoResultado] = useState(false);
 
-})
 
-const [ resultado, setResultado] = useState({})
-
-const consultarClima = async datos => {
+  const consultarClima = async (datos) => {
+    setCargando(true);
+    setnoResultado(false);
     try {
+      const { ciudad, pais } = datos;
+      const appId = import.meta.env.VITE_API_KEY;
+      const url = `http://api.openweathermap.org/geo/1.0/direct?q=${ciudad},${pais}&limit=1&appid=${appId}`;
+      const { data } = await axios(url);
 
-        const {ciudad, pais } = datos
-        const appId = import.meta.env.VITE_API_KEY
-        const url = `http://api.openweathermap.org/geo/1.0/direct?q=${ciudad},${pais}&limit=1&appid=${appId}`
-        const { data } = await axios(url)
+      const { lat, lon } = data[0];
 
-        const {lat,lon} = data[0]
+      const urlClima = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${appId}`;
 
-        const urlClima = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${appId}`
-
-        const { data: clima } = await axios(urlClima)
-        setResultado(clima)
-        
+      const { data: clima } = await axios(urlClima);
+      setResultado(clima);
+     
 
 
     } catch (error) {
-        console.error(error)
+      setnoResultado('No hay resultados')
+    } finally {
+        setCargando(false);
     }
-}
+  };
 
-const datosBusqueda = e => {
+  const datosBusqueda = (e) => {
     setBusqueda({
-        ...busqueda,
-        [e.target.name]: e.target.value
-    })
-}
+      ...busqueda,
+      [e.target.name]: e.target.value,
+    });
+  };
 
+  return (
+    <ClimaContext.Provider
+      value={{
+        busqueda,
+        datosBusqueda,
+        consultarClima,
+        resultado,
+        cargando,
+        noResultado,
+      }}
+    >
+      {children}
+    </ClimaContext.Provider>
+  );
+};
 
+export { ClimaProvider };
 
-    return(
-        <ClimaContext.Provider
-            value={{
-                busqueda,
-                datosBusqueda,
-                consultarClima,
-                resultado
-            }}
-        >
-
-            {children}
-        </ClimaContext.Provider>
-    )
-}
-
-export {
-    ClimaProvider
-}
-
-export default ClimaContext
+export default ClimaContext;

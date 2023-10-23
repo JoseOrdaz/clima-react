@@ -1,11 +1,12 @@
 import Formulario from "./Formulario"
 import Resultado from "./Resultado"
+import Loading from "./Loading"
 import useClima from    "../hooks/useClima"
 
 
 const AppClima = () => {
 
-    const { resultado } = useClima();
+    const { resultado, cargando, noResultado } = useClima();
 
 
 
@@ -13,7 +14,10 @@ const AppClima = () => {
     <>
     <main className="dos-columnas">
         <Formulario></Formulario>
-        {resultado?.name && <Resultado></Resultado>}
+
+        {cargando ? <Loading /> : 
+        resultado?.name ? <Resultado></Resultado> :
+        noResultado ? <p>{noResultado}</p> : <p>El resultado se muestra aquí</p> }
 
     </main>
    
